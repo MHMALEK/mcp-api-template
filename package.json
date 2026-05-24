@@ -1,0 +1,31 @@
+{
+  "name": "mcp-api-template",
+  "version": "0.1.0",
+  "description": "A template MCP server that wraps any HTTP/OpenAPI API. Three generic tools (health, openapi, passthrough request), optional Bearer or OAuth2 client_credentials auth with token caching.",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "mcp-api-template": "dist/index.js"
+  },
+  "scripts": {
+    "clean": "rm -rf dist",
+    "build": "npm run clean && tsc",
+    "start": "node dist/index.js",
+    "dev": "tsx src/index.ts",
+    "test": "node --import tsx/esm --test src/tests/*.test.ts"
+  },
+  "keywords": ["mcp", "model-context-protocol", "openapi", "template", "anthropic"],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
