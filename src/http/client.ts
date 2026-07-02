@@ -4,7 +4,7 @@
  * restarting the server.
  */
 import type { ServerConfig } from "../config.js";
-import { getAccessToken } from "./auth.js";
+import { getAuthHeaders } from "./auth.js";
 
 export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
@@ -55,14 +55,15 @@ export async function apiFetch<T = unknown>(
   };
 
   if (options.auth) {
-    const token = await getAccessToken();
-    if (!token) {
+    const authHeaders = await getAuthHeaders();
+    if (!authHeaders) {
       throw new Error(
         "auth: true but no token configured. Set BEARER_TOKEN, " +
-          "or OAUTH_TOKEN_URL + OAUTH_CLIENT_ID + OAUTH_CLIENT_SECRET.",
+          "OAUTH_TOKEN_URL + OAUTH_CLIENT_ID + OAUTH_CLIENT_SECRET, " +
+          "or API_KEY_VALUE.",
       );
     }
-    headers.Authorization = `Bearer ${token}`;
+    Object.assign(headers, authHeaders);
   }
 
   let requestBody: string | undefined;
