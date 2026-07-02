@@ -6,6 +6,7 @@
  *   1. Bearer token from env (BEARER_TOKEN). Cheapest path.
  *   2. OAuth2 client_credentials with token caching
  *      (OAUTH_TOKEN_URL, OAUTH_CLIENT_ID, OAUTH_CLIENT_SECRET).
+ *   3. Static API key header (API_KEY_VALUE, optional API_KEY_HEADER).
  *
  * If neither is configured, calls with `auth: true` will throw a
  * clear error pointing at the env vars. Calls with `auth: false`
@@ -43,6 +44,20 @@ export async function getAccessToken(): Promise<string | undefined> {
   const fresh = await fetchClientCredentialsToken(tokenUrl, clientId, clientSecret);
   tokenCache = { ...fresh, cacheKey: key };
   return fresh.token;
+}
+
+/** Returns the configured auth headers for an upstream API request. */
+export async function getAuthHeaders(): Promise<Record<string, string> | undefined> {
+  const token = await getAccessToken();
+  if (token) {
+    return { Authorization: `Bearer ${token}` };
+  }
+
+  const apiKey = process.env.API_KEY_VALUE?.trim();
+  if (!apiKey) return undefined;
+
+  const headerName = process.env.API_KEY_HEADER?.trim() || "x-api-key";
+  return { [headerName]: apiKey };
 }
 
 /** Force a token refresh (e.g. on 401 from upstream). */

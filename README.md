@@ -20,7 +20,7 @@ A template MCP server that wraps any HTTP/OpenAPI API in three generic tools, so
 | `api_openapi` | Fetches the live OpenAPI spec. The agent learns endpoint shapes from this, not from anything baked into the server. |
 | `api_request` | Generic passthrough: `method`, `path`, `body`, `query`, `auth`. Covers every endpoint without per-route definitions. |
 
-The `api_request` description includes an **agent policy** nudge — "do NOT invent payload values; ask the user if anything required is missing" — which keeps Claude from confidently POSTing made-up data when the user has been vague.
+The `api_request` description includes an **agent policy** nudge - "do NOT invent payload values; ask the user if anything required is missing" - which keeps Claude from confidently POSTing made-up data when the user has been vague.
 
 ## Quick start (against jsonplaceholder.typicode.com)
 
@@ -35,7 +35,7 @@ node dist/index.js   # speaks MCP over stdio
 Register in Claude Code:
 
 ```sh
-claude mcp add api-template -- node /absolute/path/to/mcp-api-template/dist/index.js
+Register the server as `api-template` with `node /absolute/path/to/mcp-api-template/dist/index.js`.
 ```
 
 Register in Cursor / Claude Desktop (`~/Library/Application Support/Claude/claude_desktop_config.json`):
@@ -63,13 +63,17 @@ export API_HEALTH_PATH=/health
 export API_OPENAPI_PATH=/v1/openapi.json
 ```
 
-Optional auth — pick whichever your API needs:
+Optional auth - pick whichever your API needs:
 
 ```sh
-# Option A — static Bearer token
+# Option A - static API key header
+export API_KEY_HEADER=x-api-key
+export API_KEY_VALUE="your-api-key"
+
+# Option B - static Bearer token
 export BEARER_TOKEN="eyJhbGciOi..."
 
-# Option B — OAuth2 client_credentials (server fetches + caches tokens)
+# Option C - OAuth2 client_credentials (server fetches + caches tokens)
 export OAUTH_TOKEN_URL=https://auth.example.com/oauth2/token
 export OAUTH_CLIENT_ID=your-client-id
 export OAUTH_CLIENT_SECRET=your-client-secret
@@ -78,6 +82,20 @@ export OAUTH_CLIENT_SECRET=your-client-secret
 Token caching is automatic for OAuth2: the server refreshes 30s before expiry, keyed on (token URL, client id, client secret) so multiple clients in the same process don't step on each other.
 
 See [`.env.example`](.env.example) for the full list.
+
+### Example: Xquik
+
+Xquik exposes a public OpenAPI document and accepts `x-api-key` for authenticated API calls:
+
+```sh
+export API_BASE_URL=https://xquik.com
+export API_OPENAPI_PATH=/openapi.json
+export API_HEALTH_PATH=/openapi.json
+export API_KEY_HEADER=x-api-key
+export API_KEY_VALUE="your-xquik-api-key"
+```
+
+Call `api_openapi` first, then use paths such as `/api/v1/x/tweets/search` with the query parameters from the live spec.
 
 ## Extending it
 
@@ -89,13 +107,13 @@ The pattern:
 2. Export a `register<Name>` function.
 3. Call it from [`src/index.ts`](src/index.ts).
 
-That's it — no plugin system, no registration ceremony. Each tool is one file, one register call.
+That's it - no plugin system, no registration ceremony. Each tool is one file, one register call.
 
 Tips for write tools:
 
 - Define `inputSchema` with Zod so the agent gets argument completion.
 - Use the agent-policy line in the description (see [`api-request.ts`](src/tools/api-request.ts)) to discourage hallucinated payloads.
-- Don't re-validate the request body in Zod — let the API return the canonical validation error. Maintaining a second copy of every payload schema is a maintenance trap.
+- Don't re-validate the request body in Zod - let the API return the canonical validation error. Maintaining a second copy of every payload schema is a maintenance trap.
 
 ## Repository layout
 
@@ -103,7 +121,7 @@ Tips for write tools:
 src/
 ├── config.ts           # env → ServerConfig
 ├── http/
-│   ├── client.ts       # apiFetch — URL building, headers, auth attach
+│   ├── client.ts       # apiFetch - URL building, headers, auth attach
 │   ├── auth.ts         # Bearer + OAuth2 client_credentials with cache
 │   └── query.ts        # safe URL-search-params coercion
 ├── tools/
@@ -124,7 +142,7 @@ docker run -i --rm \
   mcp-api-template
 ```
 
-Note the `-i` — MCP uses stdio, which means STDIN must stay open.
+Note the `-i` - MCP uses stdio, which means STDIN must stay open.
 
 ## Tests
 
@@ -132,7 +150,7 @@ Note the `-i` — MCP uses stdio, which means STDIN must stay open.
 npm test
 ```
 
-Tests cover the pure pieces (`coerceQuery`, `loadConfig`). The HTTP client and tool registration paths are integration-test territory — easiest to verify by pointing the server at a real API and exercising it from Claude.
+Tests cover the pure pieces (`coerceQuery`, `loadConfig`). The HTTP client and tool registration paths are integration-test territory - easiest to verify by pointing the server at a real API and exercising it from Claude.
 
 ## License
 
